@@ -62,18 +62,21 @@ class dataclass():
 
 
 class dataread():
-    def __init__(self,progressBar,statusBar):
-        self.progressBar=progressBar
-        self.statusBar=statusBar
+    def __init__(self):
+        self.sinOut1=""
+        self.sinOut2=""
         self.filelist = dict()
         self.maxCol = 0
         self.filenames=[]
         self.dirList = []
         self.filepath=""
-    def readfiles(self,filepath):  #存入数据
-        self.progressBar.setVisible(True)
-        self.statusBar().showMessage("正在进行数据转换...")
-        self.progressBar.setValue(0)
+    def readfiles(self,filepath,sinOut1,sinOut2,sinOutvisible):  #存入数据
+        self.sinOut1=sinOut1
+        self.sinOut2=sinOut2
+        self.sinOutvisible=sinOutvisible
+        self.sinOutvisible.emit(True)
+        self.sinOut1.emit("正在进行数据转换...")
+        self.sinOut2.emit(0)
         files = os.listdir(filepath)
         #排除隐藏文件和文件夹
         for f in files:
@@ -92,7 +95,7 @@ class dataread():
         print(self.filenames)
 
         for f in self.filenames:
-            self.statusBar().showMessage("正在转换 " + str(p) + "/" + str(len(self.filenames)))
+            self.sinOut1.emit("正在转换 " + str(p) + "/" + str(len(self.filenames)))
             data=dataclass()
             data.filepath=filepath
             datarow = open(filepath + '/' + f)  #读取的整个原始文件数据
@@ -172,11 +175,11 @@ class dataread():
             self.filelist[f]=data
 
             # print(self.filelist[f].Pro_Data1)
-            self.progressBar.setValue(p/len(self.filenames)*100)
+            self.sinOut2.emit(p/len(self.filenames)*100)
 
             p+=1
-        self.progressBar.setVisible(False)
-        self.statusBar().showMessage("数据转换成功！")
+        self.sinOutvisible.emit(False)
+        self.sinOut1.emit("数据转换成功！")
 
     def writeXls(self,outpath):
         print(self.filelist)
@@ -232,11 +235,11 @@ class dataread():
             return s1 * ((1 + (x / s2)) ** (-s3)) + s4
 
         if(filename==""):
-            self.progressBar.setVisible(True)
+            self.sinOutvisible.emit(True)
             p=1
 
             for datakey in self.filelist:
-                self.statusBar().showMessage("正在拟合 " + str(p) + "/" + str(len(self.filenames)))
+                self.sinOut1.emit("正在拟合 " + str(p) + "/" + str(len(self.filenames)))
                 data=self.filelist[datakey]
                 try:
                     popt, pcov = curve_fit(fun1, data.Pro_Data1_X, data.Pro_Data1,maxfev=500000)
@@ -246,10 +249,10 @@ class dataread():
                 data.Cut_Data1fit_X = np.linspace(data.Pro_Data1_X[0], data.Pro_Data1_X[-1], 1000).tolist()
                 data.Cut_Data1fit = fun1(data.Cut_Data1fit_X, popt[0], popt[1], popt[2], popt[3])
                 print(data.Cut_Data1fit)
-                self.progressBar.setValue(p / len(self.filenames) * 100)
+                self.sinOut2.emit(p / len(self.filenames) * 100)
                 p=p+1
-        self.progressBar.setVisible(False)
-        self.statusBar().showMessage("数据拟合成功！")
+        self.sinOutvisible.emit(False)
+        self.sinOut1.emit("数据拟合成功！")
 
 
 

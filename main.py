@@ -3,6 +3,33 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Mydemo import*
 from dataread import*
+
+class Worker(QThread):
+    sinOut1 = pyqtSignal(str)
+    sinOut2 = pyqtSignal(int)
+    sinOutvisible = pyqtSignal(bool)
+    def __init__(self,data,path,parent=None):
+        super(Worker, self).__init__(parent)
+        self.working = True
+        self.data=data
+        self.data=dataread()
+        self.path=path
+
+    def __del__(self):
+        #线程状态改变与线程终止
+        self.working = False
+        self.wait()
+
+    def run(self):
+        #在函数里激发信号
+        # while self.working == True:
+        self.data.readfiles(self.path,self.sinOut1,self.sinOut2,self.sinOutvisible)
+
+
+
+
+
+
 class main (QMainWindow):
     def __init__(self, parent=None):
         self.inpath=""
@@ -108,20 +135,45 @@ class main (QMainWindow):
         self.widget.setLayout(self.grid)
         self.tab.addTab(self.widget,"数据预处理")
         self.setCentralWidget(self.tab)
-        self.data=dataread(self.progressBar,self.statusBar)
+        self.data = ""
+
+
+
+
+
+
+
+
+    def showmessage(self,message):
+        self.statusBar().showMessage(message)
+    def setprogress(self,value):
+        self.progressBar.setValue(value)
+
+    def sinOutvisible(self,visible):
+        self.progressBar.setVisible(visible)
+
 
     def readfileButtonclicked(self):
         self.statusBar().showMessage("正在选择文件夹...")
-        path = QFileDialog.getExistingDirectory(self, "请选择数据文件的根目录")
-        # path = "C:/Users/ENERGY/Desktop/工作文件/test"
+        # path = QFileDialog.getExistingDirectory(self, "请选择数据文件的根目录")
+        path = "C:/Users/ENERGY/Desktop/工作文件/lhy"
         if path=="":
             self.statusBar().showMessage("未选择文件夹！")
         elif(path==self.inpath):
             self.statusBar().showMessage("读取文件夹位置未改变！")
         else:
-            self.data.readfiles(path)
+            self.threadread = Worker(self.data,path)
+            self.threadread.sinOut1.connect(self.showmessage)
+            self.threadread.sinOut2.connect(self.setprogress)
+            self.threadread.sinOutvisible.connect(self.sinOutvisible)
+            self.threadread.start()
+
+            # self.data.readfiles(path)
+
+
             # self.statusBar().showMessage("文件读取成功，正在加载数据！")
             keys=self.data.filelist
+            print(keys)
             self.Table1.addItems(keys)
             self.inLineEdit.setText(path)
             self.inpath=path
