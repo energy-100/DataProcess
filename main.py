@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Mydemo import*
 from dataread import*
+from PyQt5 import QtCore
 class main (QMainWindow):
     def __init__(self, parent=None):
         self.inpath=""
@@ -65,11 +66,11 @@ class main (QMainWindow):
         self.grid.addWidget(self.outLineEdit, 1, 1, 1, 2)
 
         self.cutButton = QPushButton("裁剪")
-        self.grid.addWidget(self.cutButton, 6, 2, 1, 1)
+        self.grid.addWidget(self.cutButton, 7, 4, 1, 1)
         self.cutButton.clicked.connect(lambda: self.cutButtonlicked())
 
         self.fitButton = QPushButton("数据拟合")
-        self.grid.addWidget(self.fitButton, 6, 3, 1, 1)
+        self.grid.addWidget(self.fitButton, 6, 5, 1, 1)
         self.fitButton.clicked.connect(lambda: self.fitButtonlicked())
 
 
@@ -82,27 +83,39 @@ class main (QMainWindow):
         self.grid.addWidget(self.savefileButton,7,14,1,1)
         self.savefileButton.clicked.connect(lambda: self.savefileButtonlicked())
 
-        self.cutlabel = QLabel("请选择裁剪点数:")
+
+        self.cutlabel = QLabel("请选择开始数据点:")
         self.cutlabel.setAlignment(Qt.AlignRight)
         self.grid.addWidget(self.cutlabel, 6, 0, 1, 1)
 
-        self.cutlabel = QLabel("请选择裁剪类型:")
+        self.cutlabel = QLabel("请选择结束数据点:")
         self.cutlabel.setAlignment(Qt.AlignRight)
         self.grid.addWidget(self.cutlabel, 7, 0, 1, 1)
+
+        self.cutlabel = QLabel("请选择裁剪类型:")
+        self.cutlabel.setAlignment(Qt.AlignRight)
+        self.grid.addWidget(self.cutlabel, 6, 2, 1, 1)
 
         self.cuttypeComboBox = QComboBox()
         self.cuttypeComboBox.addItems(
             ["批量裁剪"])
         # self.cuttypeComboBox.setCurrentIndex(0)
         # self.cuttypeComboBox.currentIndexChanged.connect(lambda: self.ChangedcuttypeComboBox())
-        self.grid.addWidget(self.cuttypeComboBox, 7, 1, 1, 2)
+        self.grid.addWidget(self.cuttypeComboBox, 6, 3, 1, 2)
 
-        self.cutComboBox = QComboBox()
-        self.cutComboBox.addItems(
-            ["1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","51", "16","17", "18","19", "20"])
-        self.cutComboBox.setCurrentIndex(0)
-        # self.cutComboBox.currentIndexChanged.connect(lambda: self.ChangedcutComboBox())
-        self.grid.addWidget(self.cutComboBox, 6, 1, 1, 1)
+        self.cutComboBoxstart = QComboBox()
+        self.cutComboBoxstart.addItems(
+            ["0","1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","15", "16","17", "18","19", "20"])
+        self.cutComboBoxstart.setCurrentIndex(0)
+        # self.cutComboBoxstart.currentIndexChanged.connect(lambda: self.ChangedcutComboBoxstart())
+        self.grid.addWidget(self.cutComboBoxstart, 6, 1, 1, 1)
+        
+        self.cutComboBoxend = QComboBox()
+        self.cutComboBoxend.addItems(
+            ["0","1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","15", "16","17", "18","19", "20"])
+        self.cutComboBoxend.setCurrentIndex(0)
+        # self.cutComboBoxend.currentIndexChanged.connect(lambda: self.ChangedcutComboBoxend())
+        self.grid.addWidget(self.cutComboBoxend, 7, 1, 1, 1)
 
         self.widget=QWidget()
         self.widget.setLayout(self.grid)
@@ -120,37 +133,44 @@ class main (QMainWindow):
             self.statusBar().showMessage("读取文件夹位置未改变！")
         else:
             self.data.readfiles(path)
-            # self.statusBar().showMessage("文件读取成功，正在加载数据！")
+            self.statusBar().showMessage("文件读取成功，正在加载数据！")
             keys=self.data.filelist
             self.Table1.addItems(keys)
+            self.inLineEdit.blockSignals(True)
             self.inLineEdit.setText(path)
+            self.inLineEdit.blockSignals(False)
             self.inpath=path
             self.outpath=path+"/预处理后的数据"
+            self.outLineEdit.blockSignals(True)
             self.outLineEdit.setText(self.outpath)
+            self.outLineEdit.blockSignals(False)
             i=0
             self.Table2.setRowCount(len(self.data.filelist))
-            self.Table2.setColumnCount(self.data.maxCol+4)
+            # self.Table2.setColumnCount(self.data.maxCol+4)
+            self.Table2.setColumnCount(4)
             t2=["文件名","Max","Min","ACQ_Time"]
-            for z in range(self.data.maxCol):
-                t2.append(str(z))
+            # for z in range(self.data.maxCol):
+                # t2.append(str(z))
             print(t2)
+            print("正在写入标题")
             self.Table2.setHorizontalHeaderLabels(t2)
-
             print(self.data.maxCol)
-
+            print("输出数据")
             for key in self.data.filelist:
+                # print("迭代",i)
                 # print(self.data.filelist[key].Cut_Data1)
                 self.Table2.setItem(i,0,QTableWidgetItem(key))
                 self.Table2.setItem(i,1,QTableWidgetItem(str(self.data.filelist[key].Max)))
                 self.Table2.setItem(i,2,QTableWidgetItem(str(self.data.filelist[key].Min)))
                 self.Table2.setItem(i,3,QTableWidgetItem(self.data.filelist[key].ACQ_Time.strftime('%Y-%m-%d  %H:%M:%S.%f')))
-                print()
+                # print()
 
-                for j in range(len(self.data.filelist[key].Cut_Data1)):
-                    self.Table2.setItem(i, j+4, QTableWidgetItem(str(int(self.data.filelist[key].Cut_Data1[j]))))
+                # for j in range(len(self.data.filelist[key].Cut_Data1)):
+                #     self.Table2.setItem(i, j+4, QTableWidgetItem(str(int(self.data.filelist[key].Cut_Data1[j]))))
                     # print(self.data.filelist[key].Cut_Data1[j])
-                    j+=1
+                    # j+=1
                 i+=1
+            self.statusBar().showMessage("已读取并转换"+str(len(self.data.filelist))+"个数据！")
 
 
     def outfileButtonclicked(self):
@@ -248,7 +268,8 @@ class main (QMainWindow):
         self.Table3.setColumnCount(self.Table2.columnCount())
         coltitle=[]
 
-        for i in range(self.Table2.columnCount()):
+        # for i in range(self.Table2.columnCount()):
+        for i in range(4):
             coltitle.append(self.Table2.horizontalHeaderItem(i).text())
             self.Table3.setItem(0,i,QTableWidgetItem(self.Table2.item(index,i).text()))
         self.Table3.setHorizontalHeaderLabels(coltitle)
@@ -257,7 +278,7 @@ class main (QMainWindow):
         # print(y)
         self.plotdata(filename)
 
-    def ChangedcutComboBox(self,index):
+    def ChangedcutComboBoxstart(self,index):
         print()
 
 
@@ -283,22 +304,39 @@ class main (QMainWindow):
 
 
     def cutButtonlicked(self):
-        if(self.cuttypeComboBox.currentText()!="批量裁剪"):
-            for i in range(int(self.cutComboBox.currentText())):
-                self.data.filelist[self.cuttypeComboBox.currentText()].self.Cut_Data1_X.pop(0)
-                self.data.filelist[self.cuttypeComboBox.currentText()].self.Cut_Data1.pop(0)
+        self.data.cutdata(int(self.cutComboBoxstart.currentText()),int(self.cutComboBoxend.currentText()),self.cuttypeComboBox.currentText()[3:])
+        if (self.cuttypeComboBox.currentText()!="批量裁剪"):
+            find = self.Table2.findItems(self.cuttypeComboBox.currentText()[3:],QtCore.Qt.MatchExactly)
+            row = find[0].row()
+            self.Table2.setItem(row,1,QTableWidgetItem(str(self.data.filelist[self.cuttypeComboBox.currentText()[3:]].Max)))
+            self.Table2.setItem(row,2,QTableWidgetItem(str(self.data.filelist[self.cuttypeComboBox.currentText()[3:]].Min)))
         else:
-            for key,value in self.data.filelist.items():
-                for i in range(int(self.cutComboBox.currentText())):
-                    print(value.Cut_Data1_X)
-                    print(value.Cut_Data1)
-                    value.Cut_Data1_X.pop(0)
-                    try:
-                        value.Cut_Data1.pop(0)
-                    except Exception as a:
-                        print(a)
-                    print(value.Cut_Data1_X)
-                    print(value.Cut_Data1)
+            count=len(self.data.filelist)
+            self.Table2.clear()
+            self.Table2.setRowCount(len(self.data.filelist))
+            self.Table2.setColumnCount(4)
+            t2=["文件名","Max","Min","ACQ_Time"]
+            for z in range(self.data.maxCol):
+                t2.append(str(z))
+            print(t2)
+            print("正在写入标题")
+            self.Table2.setHorizontalHeaderLabels(t2)
+            p=1
+            for key in self.data.filelist:
+                # strr=""
+                # strr+="正在裁剪"+str(p)+"/"+str(count)+"  "+key
+                # print(strr)
+                # self.statusBar().showMessage(strr)
+                self.Table2.setItem(p-1,0,QTableWidgetItem(key))
+                self.Table2.setItem(p-1, 1, QTableWidgetItem(str(self.data.filelist[key].Max)))
+                self.Table2.setItem(p-1, 2, QTableWidgetItem(str(self.data.filelist[key].Min)))
+                self.Table2.setItem(p-1, 3, QTableWidgetItem(self.data.filelist[key].ACQ_Time.strftime('%Y-%m-%d  %H:%M:%S.%f')))
+                p+=1
+            self.statusBar().showMessage(
+                "已移除所有文件中的前十个数据点！(同时更新数据最大值，最小值)")
+
+
+
 
 
 
@@ -386,13 +424,22 @@ class main (QMainWindow):
         self.figure.axes.legend()
 
     def plotdata(self,filename,title="",xlabel="t",ylabel="cps"):
+        numstart=self.data.filelist[filename].cutstartnum1
+        numend=self.data.filelist[filename].cutendnum1
         self.imagenName =title
         self.figure.fig.canvas.draw_idle()
         self.figure.axes.clear()
 
         self.figure.axes.plot(self.data.filelist[filename].Cut_Data1fit_X,self.data.filelist[filename].Cut_Data1fit,color="red")
-        self.figure.axes.plot(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1)
-        self.figure.axes.scatter(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1, alpha=0.5)
+        # self.figure.axes.plot(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1)
+
+        #原始曲线
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[0:numstart+1],self.data.filelist[filename].Pro_Data1[0:numstart+1],"--",color="green")#前半段
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[numstart:numend+1],self.data.filelist[filename].Pro_Data1[numstart:numend+1],color="blue") #中段
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[numend:],self.data.filelist[filename].Pro_Data1[numend:],"--",color="green")#后半段段
+
+        self.figure.axes.scatter(self.data.filelist[filename].Pro_Data1_X,self.data.filelist[filename].Pro_Data1, alpha=0.3)
+        # self.figure.axes.scatter(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1, alpha=0.3)
         self.figure.axes.set_ylabel(ylabel)
         self.figure.axes.set_xlabel(xlabel)
         self.figure.axes.set_title(title)

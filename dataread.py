@@ -42,6 +42,8 @@ class dataclass():
         self.Pro_Data1_X = []
         self.Pro_Data1=[]
         # 裁剪数据
+        self.cutstartnum1=0
+        self.cutendnum1=0       #最后一个数据点的序号
         self.Cut_Data1_X=[]
         self.Cut_Data1 = []
         self.Cut_Data1fit_X = []
@@ -53,6 +55,8 @@ class dataclass():
         self.Pro_Data2_X = []
         self.Pro_Data2 = []
         #裁剪数据
+        self.cutstartnum2=0
+        self.cutendnum2=0
         self.Cut_Data2_X=[]
         self.Cut_Data2 = []
         self.Cut_Data2fit_X = []
@@ -162,7 +166,7 @@ class dataread():
             # print(data.Pro_Data1)
             data.Max=np.max(data.Pro_Data1)
             data.Min=np.min(data.Pro_Data1)
-
+            data.cutendnum1=len(data.Pro_Data1)-1
             #复制原始数据到Cut
             data.Cut_Data1=copy.deepcopy(data.Pro_Data1)
             data.Cut_Data1_X=copy.deepcopy(data.Pro_Data1_X)
@@ -175,6 +179,7 @@ class dataread():
             self.progressBar.setValue(p/len(self.filenames)*100)
 
             p+=1
+            self.statusBar().showMessage("完成！")
         self.progressBar.setVisible(False)
         self.statusBar().showMessage("数据转换成功！")
 
@@ -235,15 +240,17 @@ class dataread():
             self.progressBar.setVisible(True)
             p=1
 
-            for datakey in self.filelist:
+            for key,value in self.filelist.items():
                 self.statusBar().showMessage("正在拟合 " + str(p) + "/" + str(len(self.filenames)))
-                data=self.filelist[datakey]
+                data=self.filelist[key]
+                x=value.Pro_Data1_X[value.cutstartnum1:value.cutendnum1+1]
+                y=value.Pro_Data1[value.cutstartnum1:value.cutendnum1+1]
                 try:
-                    popt, pcov = curve_fit(fun1, data.Pro_Data1_X, data.Pro_Data1,maxfev=500000)
+                    popt, pcov = curve_fit(fun1, x, y,maxfev=500000)
                 except Exception as a:
                     print(a)
                 data.paras=popt
-                data.Cut_Data1fit_X = np.linspace(data.Pro_Data1_X[0], data.Pro_Data1_X[-1], 1000).tolist()
+                data.Cut_Data1fit_X = np.linspace(data.Pro_Data1_X[data.cutstartnum1], data.Pro_Data1_X[data.cutendnum1], 1000).tolist()
                 data.Cut_Data1fit = fun1(data.Cut_Data1fit_X, popt[0], popt[1], popt[2], popt[3])
                 print(data.Cut_Data1fit)
                 self.progressBar.setValue(p / len(self.filenames) * 100)
@@ -251,6 +258,50 @@ class dataread():
         self.progressBar.setVisible(False)
         self.statusBar().showMessage("数据拟合成功！")
 
+    def cutdata(self,numstart,numend,filename):
+
+        # 单文件
+        if (filename != "剪"):
+            self.filelist[filename].cutstartnum1=numstart
+            self.filelist[filename].cutendnum1=len(self.filelist[filename].Pro_Data1)-numend-1
+            print("numstart",self.filelist[filename].cutstartnum1)
+            print("numend",self.filelist[filename].cutendnum1)
+            # for i in range(numstart):
+            #     print(filename)
+            #     self.filelist[filename].Cut_Data1_X.pop(0)
+            #     self.filelist[filename].Cut_Data1.pop(0)
+            self.statusBar().showMessage(
+                "已经移除" + filename + "文件的前" + str(numstart) + "后" + str(numend)+"个数据点,并更新数据的区间内最值")
+            # self.filelist[filename].Max=np.max(self.filelist[filename].Cut_Data1)
+            # self.filelist[filename].Min=np.min(self.filelist[filename].Cut_Data1)
+            self.countparas(filename)
+            # self.filelist[filename].Max=np.max(self.filelist[filename].Pro_Data1[numstart,])
+            # self.filelist[filename].Min=np.min(self.filelist[filename].Pro_Data1[])
+
+        #批处理
+        else:
+            # self.filelist[filename].cutstartnum1=numstart
+            # self.filelist[filename].cutendnum1=len(self.filelist[filename].Pro_Data1)-numend-1
+            p = 1
+            for key, value in self.filelist.items():
+                value.cutstartnum1=numstart
+                value.cutendnum1=len(self.filelist[key].Pro_Data1)-numend-1
+                # for i in range(numstart):
+                #     value.Cut_Data1_X.pop(0)
+                #     value.Cut_Data1.pop(0)
+                p += 1
+
+                # value.Max = np.max(value.Cut_Data1)
+                # value.Min = np.min(value.Cut_Data1)
+                self.countparas(key)
+            self.statusBar().showMessage("已经移除所有文件的前" + str(numstart) + "后" + str(numend)+"个数据点,并更新数据的区间内最值")
+
+
+    def countparas(self,filename):
+        numstart=self.filelist[filename].cutstartnum1
+        numend=self.filelist[filename].cutendnum1
+        self.filelist[filename].Max = np.max(self.filelist[filename].Pro_Data1[numstart:numend+1])
+        self.filelist[filename].Min = np.min(self.filelist[filename].Pro_Data1[numstart:numend+1])
 
 
 
