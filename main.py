@@ -3,6 +3,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from Mydemo import*
 from dataread import*
+from PyQt5 import QtCore
 class main (QMainWindow):
     def __init__(self, parent=None):
         self.inpath=""
@@ -35,6 +36,7 @@ class main (QMainWindow):
 
         self.Table2=QTableWidget()
         self.Table2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.Table2.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.Table2.horizontalHeader().sectionClicked.connect(self.Table2HorizontalHeaderClick)
         self.Table2.verticalHeader().sectionClicked.connect(self.Table2VerticalHeaderClick)
         self.Table2.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -65,11 +67,11 @@ class main (QMainWindow):
         self.grid.addWidget(self.outLineEdit, 1, 1, 1, 2)
 
         self.cutButton = QPushButton("裁剪")
-        self.grid.addWidget(self.cutButton, 6, 2, 1, 1)
+        self.grid.addWidget(self.cutButton, 6, 7, 1, 1)
         self.cutButton.clicked.connect(lambda: self.cutButtonlicked())
 
         self.fitButton = QPushButton("数据拟合")
-        self.grid.addWidget(self.fitButton, 6, 3, 1, 1)
+        self.grid.addWidget(self.fitButton, 7, 7, 1, 1)
         self.fitButton.clicked.connect(lambda: self.fitButtonlicked())
 
 
@@ -82,75 +84,125 @@ class main (QMainWindow):
         self.grid.addWidget(self.savefileButton,7,14,1,1)
         self.savefileButton.clicked.connect(lambda: self.savefileButtonlicked())
 
-        self.cutlabel = QLabel("请选择裁剪点数:")
-        self.cutlabel.setAlignment(Qt.AlignRight)
-        self.grid.addWidget(self.cutlabel, 6, 0, 1, 1)
 
-        self.cutlabel = QLabel("请选择裁剪类型:")
+        self.cutstartlabel = QLabel("删除数据个数(前):")
+        self.cutstartlabel.setAlignment(Qt.AlignRight)
+        self.grid.addWidget(self.cutstartlabel, 6, 0, 1, 1)
+
+        self.cutendlabel = QLabel("删除数据个数(后):")
+        self.cutendlabel.setAlignment(Qt.AlignRight)
+        self.grid.addWidget(self.cutendlabel, 6, 2, 1, 1)
+
+        self.cutlabel = QLabel("裁剪模式:")
         self.cutlabel.setAlignment(Qt.AlignRight)
-        self.grid.addWidget(self.cutlabel, 7, 0, 1, 1)
+        self.grid.addWidget(self.cutlabel, 6, 4, 1, 1)
+
 
         self.cuttypeComboBox = QComboBox()
         self.cuttypeComboBox.addItems(
             ["批量裁剪"])
         # self.cuttypeComboBox.setCurrentIndex(0)
         # self.cuttypeComboBox.currentIndexChanged.connect(lambda: self.ChangedcuttypeComboBox())
-        self.grid.addWidget(self.cuttypeComboBox, 7, 1, 1, 2)
+        self.grid.addWidget(self.cuttypeComboBox, 6, 5, 1, 2)
 
-        self.cutComboBox = QComboBox()
-        self.cutComboBox.addItems(
-            ["1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","51", "16","17", "18","19", "20"])
-        self.cutComboBox.setCurrentIndex(0)
-        # self.cutComboBox.currentIndexChanged.connect(lambda: self.ChangedcutComboBox())
-        self.grid.addWidget(self.cutComboBox, 6, 1, 1, 1)
+
+        self.fitlabel = QLabel("拟合模式:")
+        self.fitlabel.setAlignment(Qt.AlignRight)
+        self.grid.addWidget(self.fitlabel, 7, 0, 1, 1)
+
+        self.fitComboBox = QComboBox()
+        self.fitComboBox.addItems(
+            ["批量拟合"])
+        # self.fitComboBox.setCurrentIndex(0)
+        # self.fitComboBox.currentIndexChanged.connect(lambda: self.ChangedfitComboBox())
+        self.grid.addWidget(self.fitComboBox, 7, 1, 1, 2)
+
+        self.cutComboBoxstart = QComboBox()
+        self.cutComboBoxstart.addItems(
+            ["0","1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","15", "16","17", "18","19", "20"])
+        self.cutComboBoxstart.setCurrentIndex(0)
+        # self.cutComboBoxstart.currentIndexChanged.connect(lambda: self.ChangedcutComboBoxstart())
+        self.grid.addWidget(self.cutComboBoxstart, 6, 1, 1, 1)
+
+        self.cutComboBoxend = QComboBox()
+        self.cutComboBoxend.addItems(
+            ["0","1", "2","3", "4","5", "6","7", "8","9", "10","11", "12","13", "14","15", "16","17", "18","19", "20"])
+        self.cutComboBoxend.setCurrentIndex(0)
+        # self.cutComboBoxend.currentIndexChanged.connect(lambda: self.ChangedcutComboBoxend())
+        self.grid.addWidget(self.cutComboBoxend, 6, 3, 1, 1)
+
+        #函数拟合符复选框
+        self.cb1 = QCheckBox('双曲',self)
+        self.grid.addWidget(self.cb1, 7, 3, 1, 1)
+        self.cb2 = QCheckBox('指数',self)
+        self.grid.addWidget(self.cb2, 7, 4, 1, 1)
+        self.cb3 = QCheckBox('双曲积分',self)
+        self.grid.addWidget(self.cb3, 7, 5, 1, 1)
+        self.cb4 = QCheckBox('指数积分',self)
+        self.grid.addWidget(self.cb4, 7, 6, 1, 1)
+
+
+
 
         self.widget=QWidget()
         self.widget.setLayout(self.grid)
         self.tab.addTab(self.widget,"数据预处理")
         self.setCentralWidget(self.tab)
-        self.data=dataread(self.progressBar,self.statusBar)
+        self.data=""
+
+
+
 
     def readfileButtonclicked(self):
+        self.data = dataread(self.progressBar, self.statusBar)
         self.statusBar().showMessage("正在选择文件夹...")
         path = QFileDialog.getExistingDirectory(self, "请选择数据文件的根目录")
         # path = "C:/Users/ENERGY/Desktop/工作文件/test"
+        # path = "C:/Users/ENERGY/Desktop/工作文件/lhy"
         if path=="":
             self.statusBar().showMessage("未选择文件夹！")
         elif(path==self.inpath):
             self.statusBar().showMessage("读取文件夹位置未改变！")
         else:
             self.data.readfiles(path)
-            # self.statusBar().showMessage("文件读取成功，正在加载数据！")
+            self.statusBar().showMessage("文件读取成功，正在加载数据！")
             keys=self.data.filelist
             self.Table1.addItems(keys)
+            self.inLineEdit.blockSignals(True)
             self.inLineEdit.setText(path)
+            self.inLineEdit.blockSignals(False)
             self.inpath=path
             self.outpath=path+"/预处理后的数据"
+            self.outLineEdit.blockSignals(True)
             self.outLineEdit.setText(self.outpath)
+            self.outLineEdit.blockSignals(False)
             i=0
             self.Table2.setRowCount(len(self.data.filelist))
-            self.Table2.setColumnCount(self.data.maxCol+4)
+            # self.Table2.setColumnCount(self.data.maxCol+4)
+            self.Table2.setColumnCount(4)
             t2=["文件名","Max","Min","ACQ_Time"]
-            for z in range(self.data.maxCol):
-                t2.append(str(z))
+            # for z in range(self.data.maxCol):
+                # t2.append(str(z))
             print(t2)
+            print("正在写入标题")
             self.Table2.setHorizontalHeaderLabels(t2)
-
             print(self.data.maxCol)
-
+            print("输出数据")
             for key in self.data.filelist:
+                # print("迭代",i)
                 # print(self.data.filelist[key].Cut_Data1)
                 self.Table2.setItem(i,0,QTableWidgetItem(key))
                 self.Table2.setItem(i,1,QTableWidgetItem(str(self.data.filelist[key].Max)))
                 self.Table2.setItem(i,2,QTableWidgetItem(str(self.data.filelist[key].Min)))
                 self.Table2.setItem(i,3,QTableWidgetItem(self.data.filelist[key].ACQ_Time.strftime('%Y-%m-%d  %H:%M:%S.%f')))
-                print()
+                # print()
 
-                for j in range(len(self.data.filelist[key].Cut_Data1)):
-                    self.Table2.setItem(i, j+4, QTableWidgetItem(str(int(self.data.filelist[key].Cut_Data1[j]))))
+                # for j in range(len(self.data.filelist[key].Cut_Data1)):
+                #     self.Table2.setItem(i, j+4, QTableWidgetItem(str(int(self.data.filelist[key].Cut_Data1[j]))))
                     # print(self.data.filelist[key].Cut_Data1[j])
-                    j+=1
+                    # j+=1
                 i+=1
+            self.statusBar().showMessage("已读取并转换"+str(len(self.data.filelist))+"个数据！")
 
 
     def outfileButtonclicked(self):
@@ -236,14 +288,12 @@ class main (QMainWindow):
         print(index)
         self.cuttypeComboBox.clear()
         self.cuttypeComboBox.addItems(["["+str(index+1)+"]"+self.Table2.item(index,0).text(),"批量裁剪"])
+        self.fitComboBox.clear()
+        self.fitComboBox.addItems(["["+str(index+1)+"]"+self.Table2.item(index,0).text(),"批量拟合"])
         filename=self.Table2.item(index, 0).text()
         x=self.data.filelist[filename].Pro_Data1_X
         y=self.data.filelist[filename].Pro_Data1
-        # try:
-        #     # print(self.Table2.verticalHeaderItem(index).text())
-        # except Exception as a:
-        #     print(a)
-        # if(index==1):
+
         self.Table3.setRowCount(1)
         self.Table3.setColumnCount(self.Table2.columnCount())
         coltitle=[]
@@ -253,11 +303,12 @@ class main (QMainWindow):
             self.Table3.setItem(0,i,QTableWidgetItem(self.Table2.item(index,i).text()))
         self.Table3.setHorizontalHeaderLabels(coltitle)
 
-        # print(x)
-        # print(y)
-        self.plotdata(filename)
+        numstart=self.data.filelist[self.Table2.item(index,0).text()].cutstartnum1
+        numend=self.data.filelist[self.Table2.item(index,0).text()].cutendnum1
+        title=self.Table2.item(index,0).text()+"点"+str(numstart)+"到点"+str(numend+1)+"数据折线图"
+        self.plotdata(filename,title)
 
-    def ChangedcutComboBox(self,index):
+    def ChangedcutComboBoxstart(self,index):
         print()
 
 
@@ -279,26 +330,94 @@ class main (QMainWindow):
                 "无图片！")
 
     def fitButtonlicked(self):
-        self.data.Fitting()
+        title=""
+        if(self.fitComboBox.currentText()!="批量拟合"):
+            # self.statusBar().showMessage("开始进行批量数据拟合...")
+            index=self.fitComboBox.currentText().find("]")
+            title=self.fitComboBox.currentText()[(index+1):]
+            print(title)
+        if(self.cb1.isChecked()):
+            self.data.Fitting(1,title)
+        if(self.cb2.isChecked()):
+            self.data.Fitting(2,title)
+        if (self.cb3.isChecked()):
+            self.data.Fitting(3, title)
+        if (self.cb4.isChecked()):
+            self.data.Fitting(4, title)
+
+        self.Table2.clear()
+        self.Table2.setRowCount(len(self.data.filelist))
+        self.Table2.setColumnCount(4+14)
+        i=0
+        title2=["文件名","Max","Min","ACQ_Time","(双曲线)I_0", "(双曲线)τ", "(双曲线)Γ", "(双曲线)D","(指数)I_0", "(指数)τ", "(指数)D","(双曲线积分)I_0", "(双曲线积分)τ", "(双曲线积分)Γ", "(双曲线)D","(指数积分)I_0", "(指数积分)τ", "(指数)D"]
+        self.Table2.setHorizontalHeaderLabels(title2)
+        for key,value in self.data.filelist.items():
+            row=[]
+            for para in value.paras["双曲线拟合"]:
+                row.append(para)
+            for para in value.paras["指数拟合"]:
+                row.append(para)
+            for para in value.paras["双曲线积分拟合"]:
+                row.append(para)
+            for para in value.paras["指数积分拟合"]:
+                row.append(para)
+            self.Table2.setItem(i, 0, QTableWidgetItem(key))
+            self.Table2.setItem(i, 1, QTableWidgetItem(str(value.Max)))
+            self.Table2.setItem(i, 2, QTableWidgetItem(str(value.Min)))
+            self.Table2.setItem(i, 3,
+                                QTableWidgetItem(value.ACQ_Time.strftime('%Y-%m-%d  %H:%M:%S.%f')))
+            j=4
+            for para in row:
+                if(para!=""):
+                    self.Table2.setItem(i,j,QTableWidgetItem(str(round(para,2))))
+                else:
+                    self.Table2.setItem(i, j, QTableWidgetItem(str(para)))
+                j+=1
+            i+=1
+
+
+        # 若不是批量拟合，只改变一行数据
+        if (self.fitComboBox.currentText() != "批量拟合"):
+            index = self.fitComboBox.currentText().find("]")
+            self.plotdata(self.fitComboBox.currentText()[(index + 1):])
 
 
     def cutButtonlicked(self):
-        if(self.cuttypeComboBox.currentText()!="批量裁剪"):
-            for i in range(int(self.cutComboBox.currentText())):
-                self.data.filelist[self.cuttypeComboBox.currentText()].self.Cut_Data1_X.pop(0)
-                self.data.filelist[self.cuttypeComboBox.currentText()].self.Cut_Data1.pop(0)
+        self.data.cutdata(int(self.cutComboBoxstart.currentText()),int(self.cutComboBoxend.currentText()),self.cuttypeComboBox.currentText()[3:])
+        if (self.cuttypeComboBox.currentText()!="批量裁剪"):
+
+            index=self.cuttypeComboBox.currentText().find("]")
+            title=self.cuttypeComboBox.currentText()[(index+1):]
+            find = self.Table2.findItems(title,QtCore.Qt.MatchExactly)
+            row = find[0].row()
+
+            print(title)
+            self.Table2.setItem(row,1,QTableWidgetItem(str(self.data.filelist[title].Max)))
+            self.Table2.setItem(row,2,QTableWidgetItem(str(self.data.filelist[title].Min)))
+            self.plotdata(title)
         else:
-            for key,value in self.data.filelist.items():
-                for i in range(int(self.cutComboBox.currentText())):
-                    print(value.Cut_Data1_X)
-                    print(value.Cut_Data1)
-                    value.Cut_Data1_X.pop(0)
-                    try:
-                        value.Cut_Data1.pop(0)
-                    except Exception as a:
-                        print(a)
-                    print(value.Cut_Data1_X)
-                    print(value.Cut_Data1)
+            count=len(self.data.filelist)
+            self.Table2.clear()
+            self.Table2.setRowCount(len(self.data.filelist))
+            self.Table2.setColumnCount(4)
+            t2=["文件名","Max","Min","ACQ_Time"]
+            for z in range(self.data.maxCol):
+                t2.append(str(z))
+            print(t2)
+            print("正在写入标题")
+            self.Table2.setHorizontalHeaderLabels(t2)
+            p=1
+            for key in self.data.filelist:
+                self.Table2.setItem(p-1,0,QTableWidgetItem(key))
+                self.Table2.setItem(p-1, 1, QTableWidgetItem(str(self.data.filelist[key].Max)))
+                self.Table2.setItem(p-1, 2, QTableWidgetItem(str(self.data.filelist[key].Min)))
+                self.Table2.setItem(p-1, 3, QTableWidgetItem(self.data.filelist[key].ACQ_Time.strftime('%Y-%m-%d  %H:%M:%S.%f')))
+                p+=1
+            self.statusBar().showMessage(
+                "已移除所有文件中的前十个数据点！(同时更新数据最大值，最小值)")
+
+
+
 
 
 
@@ -386,13 +505,22 @@ class main (QMainWindow):
         self.figure.axes.legend()
 
     def plotdata(self,filename,title="",xlabel="t",ylabel="cps"):
+        numstart=self.data.filelist[filename].cutstartnum1
+        numend=self.data.filelist[filename].cutendnum1
         self.imagenName =title
         self.figure.fig.canvas.draw_idle()
         self.figure.axes.clear()
 
         self.figure.axes.plot(self.data.filelist[filename].Cut_Data1fit_X,self.data.filelist[filename].Cut_Data1fit,color="red")
-        self.figure.axes.plot(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1)
-        self.figure.axes.scatter(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1, alpha=0.5)
+        # self.figure.axes.plot(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1)
+
+        #原始曲线
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[0:numstart+1],self.data.filelist[filename].Pro_Data1[0:numstart+1],"--",color="green")#前半段
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[numstart:numend+1],self.data.filelist[filename].Pro_Data1[numstart:numend+1],color="blue") #中段
+        self.figure.axes.plot(self.data.filelist[filename].Pro_Data1_X[numend:],self.data.filelist[filename].Pro_Data1[numend:],"--",color="green")#后半段段
+
+        self.figure.axes.scatter(self.data.filelist[filename].Pro_Data1_X,self.data.filelist[filename].Pro_Data1, alpha=0.3)
+        # self.figure.axes.scatter(self.data.filelist[filename].Cut_Data1_X,self.data.filelist[filename].Cut_Data1, alpha=0.3)
         self.figure.axes.set_ylabel(ylabel)
         self.figure.axes.set_xlabel(xlabel)
         self.figure.axes.set_title(title)
