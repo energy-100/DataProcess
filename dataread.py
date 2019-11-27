@@ -4,10 +4,21 @@ import re
 import numpy as np
 import xlrd
 import xlwt
+import xlsxwriter
 from scipy.optimize import curve_fit
 from datetime import datetime
 from xlutils.copy import copy
 import copy
+class funclass():
+    def __init__(self):
+        self.filename=""
+        self.funtype=""
+        self.para=[]
+        self.fitx=[]
+        self.fity=[]
+        self.method=""
+        self.cutstartnum1=0
+        self.cutendnum1=0
 
 class dataclass():
     def __init__(self, parent=None):
@@ -118,10 +129,16 @@ class dataread():
                 linenew=line.strip()
                 if (linenew!=""):
                     datapar.append(linenew)
+            print(datapar)
             # self.ACQ_Time=re.search("(\d{4}-\d{1,2}-\d{1,2}\s*\d{1,2}:\d{1,2}:\d{1,2}:\s*\d{1,3})",datapar[1])
-            temptime=re.search("\d{4}-\s*\d{1,2}-\s*\d{1,2}\s*\d{1,2}:\s*\d{1,2}:\s*\d{1,2}:\s*\d{1,3}",datapar[1]).group(0)
-            timelist = re.split('[- :]\s*', temptime)
-            # print(timelist)
+            temptime=re.search("\d{4}-\s*\d{1,2}-\s*\d{1,2}\s*\d{1,2}:\s*\d{1,2}:\s*\d{1,2}.\s*\d{1,3}\s*.",datapar[1]).group(0)
+            print(temptime)
+            # strtemp=temptime[5].split('.')
+            # temptime[5]=strtemp[0]
+            # temptime.append(strtemp[1])
+            timelist = re.split('[- :.]\s*', temptime)
+            print(timelist)
+
             timestr=timelist[0] + "-" + timelist[1] + "-" + timelist[2] + "  " + timelist[3] + ":" + timelist[4] + ":" + timelist[5]+"."+timelist[6]
             data.ACQ_Time=datetime.strptime(timestr,'%Y-%m-%d  %H:%M:%S.%f')
             data.Project=datapar[2].strip(datapar[2].split(": ")[0]).strip(": ")
@@ -150,6 +167,10 @@ class dataread():
             # print(data)
 
             datanum=int(data.Repeat_Times*data.Count_Num_per_gate)
+            # datanum=int(data.Repeat_Times*data.Count_Num_per_gate*data.Acq_Gate_Times)
+            print("datanum",datanum)
+            print(datanum/data.Repeat_Times,data.Acq_Gate_Times*data.Count_Num_per_gate)
+            print()
             data.Pro_Data1=np.zeros(data.Acq_Gate_Times*data.Count_Num_per_gate).tolist()
             # [0 for i in range(data.Acq_Gate_Times*data.Count_Num_per_gate)]
             # print(data.Gate_Time)
@@ -157,10 +178,10 @@ class dataread():
             # print("data.Count_Num_per_gate*data.Gate_Time",data.Count_Num_per_gate*data.Gate_Time)
 
 
-            for i in range(19,19+datanum):
+            for i in range(19,19+datanum*data.Acq_Gate_Times):
                 data.Raw_Data1.append(int(datapar[i]))
             if(data.Channel_Number=="2"):
-                for i in range(19+datanum+1,19+datanum+1+datanum):
+                for i in range(19+datanum+1,19+datanum*data.Acq_Gate_Times+1+datanum*data.Acq_Gate_Times):
                     data.Raw_Data2.append(int(datapar[i]))
             # print(len(data.Raw_Data1))
             # print(len(data.Raw_Data2))
@@ -176,6 +197,7 @@ class dataread():
                     data.Pro_mal1.append(ncpslist)
                     data.Pro_Data1[j * data.Acq_Gate_Times + i] = ncps * dScale
             data.Interval=float(data.Gate_Time)/len(data.Pro_Data1)
+            print(data.Pro_Data1)
             # print("data.Interval",data.Interval)
             for i in range(len(data.Pro_Data1)):
                 data.Pro_Data1_X.append(round(i*data.Interval,5))
@@ -201,40 +223,49 @@ class dataread():
 
     def writeXls(self,outpath):
 
-        #_________颜色样式__________________
-        style1 = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = xlwt.Style.colour_map['yellow']  # 设置单元格背景色为黄色
-        style1.pattern = pattern
-        #_________颜色样式__________________
-        style2 = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = xlwt.Style.colour_map['green']  # 设置单元格背景色为黄色
-        style2.pattern = pattern
-        #_________颜色样式__________________
-        style3 = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = xlwt.Style.colour_map['red']  # 设置单元格背景色为黄色
-        style3.pattern = pattern
+        text=""
+        workbook=""
+        if (not (os.path.exists(outpath + "/预处理后的数据.xlsx"))):
+            if (not os.path.exists(outpath)):
+                os.makedirs(outpath)
+                # os.mknod(outpath+"/预处理后的数据.xls")
+                # print("422")
+            workbook = xlsxwriter.Workbook(outpath + "/预处理后的数据.xlsx")
+            # workbookson = xlsxwriter.Workbook(outpath + "/数据子矩阵.xlsx")
 
-        # _________颜色样式__________________
-        style4 = xlwt.XFStyle()
-        pattern = xlwt.Pattern()
-        pattern.pattern = xlwt.Pattern.SOLID_PATTERN
-        pattern.pattern_fore_colour = xlwt.Style.colour_map['blue']  # 设置单元格背景色为黄色
-        style4.pattern = pattern
+                # workbook.save(outpath + "/预处理后的数据.xls")  # 保存工作簿
+            # print("424")
+            text="数据保存成功！(首次保存，已创建目录及文件)"
+            # self.statusBar().showMessage("数据保存成功！(首次保存，已创建目录及文件)")
 
+        else:
+            try:
+                os.remove(outpath + "/预处理后的数据.xlsx")
+            except Exception as a:
+                self.statusBar().showMessage("保存失败！(文件被占用，请关闭关闭文件后重试)")
+                text="保存失败！(文件被占用，请关闭关闭文件后重试)"
+                return
+                # print(a)
+            else:
+                workbook = xlsxwriter.Workbook(outpath + "/预处理后的数据.xlsx")
+                # workbookson = xlsxwriter.Workbook(outpath + "/数据子矩阵.xlsx")
+                text="数据保存成功！(数据文件存在，已覆盖原数据文件)"
+                # workbook.save(outpath + "/预处理后的数据.xls")  # 保存工作簿
+                # print("xls格式表格写入数据成功！")
+                # self.statusBar().showMessage("数据保存成功！(数据文件存在，已覆盖原数据文件)")
         print(self.filelist)
-        workbook = xlwt.Workbook()  #表
+        self.statusBar().showMessage("正在保存...")
+        # workbook = xlsxwriter.Workbook()  #表
+        bold1 = workbook.add_format({'fg_color': 'green'})
+        bold2 = workbook.add_format({'fg_color': 'red'})
+        bold3 = workbook.add_format({'fg_color': 'blue'})
+        bold4 = workbook.add_format({'fg_color': 'yellow'})
 
-        sheetpars = workbook.add_sheet("参数数据")  #参数数据表
-        Prodata = workbook.add_sheet("预处理后的数据")  #预处理后的数据表
-        cutdata= workbook.add_sheet("裁剪后后的数据")  #预处理后的数据表
-        inf =   workbook.add_sheet("文件信息")  #预处理后的数据表
-        datamat = workbook.add_sheet("子数据矩阵")  # 子数据矩阵表
+        sheetpars = workbook.add_worksheet("参数数据")  #参数数据表
+        Prodata = workbook.add_worksheet("预处理后的数据")  #预处理后的数据表
+        cutdata= workbook.add_worksheet("裁剪后后的数据")  #预处理后的数据表
+        inf =   workbook.add_worksheet("文件信息")  #预处理后的数据表
+        # datamat = workbook.add_worksheet("子数据矩阵")  # 子数据矩阵表
 
         filenamelen=self.countlen(list(self.filelist.keys()))
         Prodata.write(0, 0, "文件名")
@@ -261,11 +292,14 @@ class dataread():
         sheetpars.write(0, 15, "(指数积分)I_0")
         sheetpars.write(0, 16, "(指数积分)τ")
         sheetpars.write(0, 17, "(指数)D")
-
-        sheetpars.col(0).width=filenamelen*256
-        sheetpars.col(3).width=28*256
+        try:
+            print(self.colnum_string(0))
+            sheetpars.set_column(self.colnum_string(0),filenamelen)
+            sheetpars.set_column(self.colnum_string(3),28)
+        except Exception as a:
+            print(a)
         for i in range(4,18):
-            sheetpars.col(i).width = self.countlen("(双曲线积分)I_0") * 256
+            sheetpars.set_column(self.colnum_string(i),self.countlen("(双曲线积分)I_0") )
 
         i = 1
         for key,value in self.filelist.items():
@@ -276,33 +310,37 @@ class dataread():
             j=4
             for para in value.paras["双曲线拟合"]:
                 print(para)
+                print("拟合1")
                 if(para!=""):
                     para=round(para,3)
-                sheetpars.write(i, j, str(para), style=style1)
+                sheetpars.write(i, j, str(para),bold1)
                 j+=1
             for para in value.paras["指数拟合"]:
                 print(para)
+                print("拟合2")
                 if (para != ""):
                     para = round(para, 3)
-                sheetpars.write(i, j, str(para), style=style2)
+                sheetpars.write(i, j, str(para),bold2)
                 j+=1
             for para in value.paras["双曲线积分拟合"]:
                 if (para != ""):
                     para = round(para, 3)
-                sheetpars.write(i, j, str(para), style=style3)
+                sheetpars.write(i, j, str(para),bold3)
                 print(para)
+                print("拟合3")
                 j+=1
             for para in value.paras["指数积分拟合"]:
                 if (para != ""):
                     para = round(para, 3)
-                sheetpars.write(i, j, str(para), style=style4)
+                sheetpars.write(i, j, str(para), bold4)
                 print(para)
+                print("拟合4")
                 j+=1
 
 
             #保存预处理后的数据
             Prodata.write(i, 0, key)
-            Prodata.col(0).width = filenamelen * 256
+            Prodata.set_column(self.colnum_string(0), filenamelen )
             z=1
             for spot in value.Pro_Data1:
                 Prodata.write(i, z, str(spot))
@@ -310,7 +348,7 @@ class dataread():
 
             # 保存预剪切后的数据
             cutdata.write(i, 0, key)
-            cutdata.col(0).width = filenamelen * 256
+            cutdata.set_column(self.colnum_string(0),  filenamelen )
             z = 1
             print(value.cutstartnum1)
             print(value.cutendnum1 + 1)
@@ -318,7 +356,7 @@ class dataread():
                 cutdata.write(i, z, str(spot))
                 z += 1
             i += 1
-
+        print("round2")
         # 文件信息
         inf.write(0, 0, "文件名")
         inf.write(0, 1, "ACQ_Time")
@@ -338,22 +376,22 @@ class dataread():
         inf.write(0, 15, "Channel_Number")
         print(type(inf))
 
-        inf.col(0).width=self.countlen(list(self.filelist.keys()))*256
-        inf.col(1).width = 28* 256
-        inf.col(2).width = self.countlen("Project")* 256
-        inf.col(3).width = self.countlen("Name  ")* 256
-        inf.col(4).width = self.countlen("Part  ")* 256
-        inf.col(5).width = self.countlen("Operator")* 256
-        inf.col(6).width = self.countlen("Desc ")* 256
-        inf.col(7).width = self.countlen("Excited_Peroid(ms)")* 256
-        inf.col(8).width = self.countlen("Excited_Time(ms)")* 256
-        inf.col(9).width = self.countlen("Acq_Delay_Time(ms)")* 256
-        inf.col(10).width = self.countlen("Gate_Time(ms)")* 256
-        inf.col(11).width = self.countlen("Count_Num_per_gate")* 256
-        inf.col(12).width = self.countlen("Repeat_Times")* 256
-        inf.col(13).width = self.countlen("Acq_Gate_Times")* 256
-        inf.col(14).width = self.countlen("Interval_per_Gate(ms)")* 256
-        inf.col(15).width = self.countlen("Channel_Number")* 256
+        inf.set_column(self.colnum_string(0), self.countlen(list(self.filelist.keys())))
+        inf.set_column(self.colnum_string(1), 28)
+        inf.set_column(self.colnum_string(2), self.countlen("Project"))
+        inf.set_column(self.colnum_string(3), self.countlen("Name  "))
+        inf.set_column(self.colnum_string(4),  self.countlen("Part  "))
+        inf.set_column(self.colnum_string(5), self.countlen("Operator"))
+        inf.set_column(self.colnum_string(6), self.countlen("Desc "))
+        inf.set_column(self.colnum_string(7), self.countlen("Excited_Peroid(ms)"))
+        inf.set_column(self.colnum_string(8), self.countlen("Excited_Time(ms)"))
+        inf.set_column(self.colnum_string(9), self.countlen("Acq_Delay_Time(ms)"))
+        inf.set_column(self.colnum_string(10), self.countlen("Gate_Time(ms)"))
+        inf.set_column(self.colnum_string(11),  self.countlen("Count_Num_per_gate"))
+        inf.set_column(self.colnum_string(12), self.countlen("Repeat_Times"))
+        inf.set_column(self.colnum_string(13), self.countlen("Acq_Gate_Times"))
+        inf.set_column(self.colnum_string(14), self.countlen("Interval_per_Gate(ms)"))
+        inf.set_column(self.colnum_string(15), self.countlen("Channel_Number"))
 
 
 
@@ -384,37 +422,99 @@ class dataread():
             inf.write(i, 14,str(round(value.Interval_per_Gate,2)))
             inf.write(i, 15,str(round(value.Channel_Number,2)))
             i+=1
+        workbook.close()
+        # 生成子矩阵文件夹
+
+        if iswrite==True:
+            if (not os.path.exists(outpath+"/数据子矩阵")):
+                os.makedirs(outpath+"/数据子矩阵")
+            for filename, file in self.filelist.items():
+                Worktemp=xlsxwriter.Workbook(outpath + "/数据子矩阵/"+filename+".xlsx")
+                sheet=Worktemp.add_worksheet("数据子矩阵")
+                for i in range(len(file.Pro_Data1)):
+                    sheet.write(0,i,str(file.Pro_Data1[i]))
+                    for j in range(len(file.Pro_mal1[0])):
+                        sheet.write(j+1, i, str(file.Pro_mal1[i][j]))
+                Worktemp.close()
 
 
 
 
-        print(outpath)
-        print(not (os.path.exists(outpath)))
-        print(os.path.exists(outpath))
-        if( not (os.path.exists(outpath+ "/预处理后的数据.xls"))):
-            if( not os.path.exists(outpath)):
-                os.makedirs(outpath)
-            # os.mknod(outpath+"/预处理后的数据.xls")
-            workbook.save(outpath + "/预处理后的数据.xls")  # 保存工作簿
-            self.statusBar().showMessage("数据保存成功！(首次保存，已创建目录及文件)")
+
+
+
+        #数据子矩阵
+        #写入一个文件（文件名不能超过31个char）
+        # try:
+        #     for filename, file in self.filelist.items():
+        #         sheet=workbookson.add_worksheet(filename)
+        #         for i in range(len(file.Pro_Data1)):
+        #             sheet.write(0,i,str(file.Pro_Data1[i]))
+        #             for j in range(file.Pro_mal1[0]):
+        #                 sheet.write(j+1, i, str(file.Pro_mal1[i][j]))
+        #     workbookson.close()
+        # except Exception as a:
+        #     print(a)
+        self.statusBar().showMessage(text)
+
+
+
+
+
+
+
+        # print(outpath)
+        # print(not (os.path.exists(outpath)))
+        # print(os.path.exists(outpath))
+        # if( not (os.path.exists(outpath+ "/预处理后的数据.xls"))):
+        #     if( not os.path.exists(outpath)):
+        #         os.makedirs(outpath)
+        #     # os.mknod(outpath+"/预处理后的数据.xls")
+        #     print("422")
+        #     try:
+        #         workbook.save(outpath + "/预处理后的数据.xls")  # 保存工作簿
+        #     print("424")
+        #     self.statusBar().showMessage("数据保存成功！(首次保存，已创建目录及文件)")
+        # else:
+        #     try:
+        #         os.remove(outpath+"/预处理后的数据.xls")
+        #     except Exception as a:
+        #         self.statusBar().showMessage("保存失败！(文件被占用，请关闭关闭文件后重试)")
+        #         print(a)
+        #     else:
+        #         workbook.save(outpath+"/预处理后的数据.xls")  # 保存工作簿
+        #         print("xls格式表格写入数据成功！")
+        #         self.statusBar().showMessage("数据保存成功！(数据文件存在，已覆盖原数据文件)")
+
+    def writesondataXls(self,outpath):
+        exist=True
+        if (not os.path.exists(outpath + "/数据子矩阵/")):
+            os.makedirs(outpath+"/数据子矩阵")
+            exist=False
+        self.progressBar.setVisible(True)
+        p=1
+        for filename, file in self.filelist.items():
+            self.statusBar().showMessage("正在保存数据子矩阵 "+str(p)+"/"+str(len(self.filelist))+" "+filename)
+            self.progressBar.setValue(p/len(self.filelist)*100)
+            Worktemp=xlsxwriter.Workbook(outpath + "/数据子矩阵/"+filename+".xlsx")
+            sheet=Worktemp.add_worksheet("数据子矩阵")
+            for i in range(len(file.Pro_Data1)):
+                sheet.write(0,i,str(file.Pro_Data1[i]))
+                for j in range(len(file.Pro_mal1[0])):
+                    sheet.write(j+1, i, str(file.Pro_mal1[i][j]))
+            Worktemp.close()
+            p+=1
+        if(exist==False):
+            self.statusBar().showMessage("首次保存，已将子矩阵文件保存到数据目录下的‘数据子矩阵文件夹’！")
         else:
-            try:
-                os.remove(outpath+"/预处理后的数据.xls")
-            except Exception as a:
-                self.statusBar().showMessage("保存失败！(文件被占用，请关闭关闭文件后重试)")
-                print(a)
-            else:
-                workbook.save(outpath+"/预处理后的数据.xls")  # 保存工作簿
-                print("xls格式表格写入数据成功！")
-                self.statusBar().showMessage("数据保存成功！(数据文件存在，已覆盖原数据文件)")
+            self.statusBar().showMessage("数据子矩阵数据更新成功！")
+        self.progressBar.setVisible(False)
 
 
 
+    def Fitting(self,funtype,method,filename=""):
 
-
-    def Fitting(self,funtype,filename=""):
-
-        param_bounds1 = ([0, 0, 0, 0], [999999999, 999999999, 999999999, 999999999])
+        param_bounds1 = ([0, 1, 0, 0], [9999999999, 100, 100, 10000])
         param_bounds2 = ([0, 1, 0 ], [999999999, 9999999999, 9999999999])
         param_bounds3 = ([0, 0, 0, 0], [np.inf, np.inf, np.inf, np.inf])
         param_bounds4 = ([0, 0, 0 ], [np.inf, np.inf, np.inf])
@@ -440,7 +540,7 @@ class dataread():
 
         def fun1(x, s1, s2, s3, s4):
             # return s1 * ((1 + (x / s2)) ** (-s3)) + s4
-            return s1 * (np.power((1 + (x / s2))  , -s3)) + s4
+            return s1 * ((1 + (x / s2)) **(-s3)) + s4
 
         def fun2(x, s1, s2, s3):
             return s1 * (np.exp(-(x/ s2))) +s3
@@ -473,7 +573,12 @@ class dataread():
                 value.Cut_Data1fit_X = np.linspace(value.Pro_Data1_X[value.cutstartnum1],value.Pro_Data1_X[value.cutendnum1], 1000).tolist()
                 if(funtype==1):
                     self.statusBar().showMessage("正在进行双曲线拟合 " + str(p) + "/" + str(len(self.filenames)))
-                    popt, pcov = curve_fit(fun1, x, y,maxfev=500000,bounds=param_bounds1)
+                    try:
+                        print(x)
+                        print(y)
+                        popt, pcov = curve_fit(fun1, x, y,maxfev=500000000,bounds=param_bounds1,method=method)
+                    except Exception as a:
+                        print(a)
                     value.paras["双曲线拟合"]=popt
                     value.Cut_Data1fit = fun1(value.Cut_Data1fit_X, popt[0], popt[1], popt[2], popt[3])
                 elif(funtype==2):
@@ -483,19 +588,19 @@ class dataread():
                     # print(x)
                     # print(y)
                     try:
-                        popt, pcov = curve_fit(fun2, x, y,maxfev=50000000,bounds=param_bounds2)
+                        popt, pcov = curve_fit(fun2, x, y,maxfev=50000000,bounds=param_bounds2,method=method)
                     except Exception as a:
                         print(a)
                     value.paras["指数拟合"] = popt
                     value.Cut_Data1fit = fun2(value.Cut_Data1fit_X, popt[0], popt[1], popt[2])
                 elif(funtype==3):
                     self.statusBar().showMessage("正在进行双曲线积分拟合 " + str(p) + "/" + str(len(self.filenames)))
-                    popt, pcov = curve_fit(fun3, x, y,maxfev=500000,bounds=param_bounds3)
+                    popt, pcov = curve_fit(fun3, x, y,maxfev=500000,bounds=param_bounds3,method=method)
                     value.paras["双曲线积分拟合"] = popt
                     value.Cut_Data1fit = fun3(value.Cut_Data1fit_X, popt[0], popt[1], popt[2], popt[3])
                 elif(funtype==4):
                     self.statusBar().showMessage("正在进行指数积分拟合 " + str(p) + "/" + str(len(self.filenames)))
-                    popt, pcov = curve_fit(fun4, x, y,maxfev=500000,bounds=param_bounds4)
+                    popt, pcov = curve_fit(fun4, x, y,maxfev=500000,bounds=param_bounds4,method=method)
                     value.paras["指数积分拟合"] = popt
                     value.Cut_Data1fit = fun4(value.Cut_Data1fit_X, popt[0], popt[1], popt[2])
 
@@ -555,6 +660,7 @@ class dataread():
         if (filename != "批量裁剪"):
             index = filename.find("]")
             title = filename[(index + 1):]
+            print(title)
             self.filelist[title].cutstartnum1=numstart
             self.filelist[title].cutendnum1=len(self.filelist[title].Pro_Data1)-numend-1
             # print("numstart",self.filelist[title].cutstartnum1)
@@ -602,7 +708,14 @@ class dataread():
             return len(x.encode())+1
 
 
-
+    def colnum_string(self,n):
+        div = n+1
+        string = ""
+        while div > 0:
+            module = (div-1) % 26
+            string = chr(65 + module) + string
+            div = int((div-module) / 26)
+        return string+":"+string
 
 
 
