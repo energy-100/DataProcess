@@ -29,5 +29,9 @@ import matplotlib.pyplot as plt
 # print(yfit)
 # plt.show()
 
-print([str(i*0.1) for i in range(1,10)])
+# print([str(i*0.1) for i in range(1,10)])
+
+x=[1,2,3,1,4,5,6,7,8,5,4]
+y=[1,2,3,1,4,5,6,7,8,5,4]
+print(list(zip(x,y)))
 
