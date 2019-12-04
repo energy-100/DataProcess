@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import os
+import time
 import seaborn as sns
 if hasattr(sys, 'frozen'):
     os.environ['PATH'] = sys._MEIPASS + ";" + os.environ['PATH']
@@ -1234,6 +1235,23 @@ class main (QMainWindow):
                 return
 
     def plotfeature(self,x,ys,title=[],xlabel="t",ylabel="cps"):
+        # xtamp=[]    #时间戳
+        # for temp in x:
+        #     xtamp.append(time.mktime(temp.timetuple()))
+        ydicts=[]
+        for ytemp in ys:
+            # print(xtamp)
+            # print(ytemp)
+            try:
+                print(list(zip(*(sorted(dict(zip(x, ytemp)).items(),key=lambda item:item[0], reverse=False)))))
+                ydict=list(zip(*(sorted(dict(zip(x, ytemp)).items(),key=lambda item:item[0], reverse=False))))
+            except Exception as a:
+                print(a)
+
+            ydicts.append(ydict)
+
+        print(ydicts)
+
         self.FigtabWidget.setCurrentIndex(2)
         titleall="所选数据文件"
         for t in title:
@@ -1245,10 +1263,20 @@ class main (QMainWindow):
         # print(y)
         self.figure3.fig.canvas.draw_idle()
         self.figure3.axes.clear()
-        for i in range(len(ys)):
-            print(title[i])
-            self.figure3.axes.plot(x,ys[i],label=title[i])
-            self.figure3.axes.scatter(x,ys[i], label=title[i],alpha=0.5)
+
+        for i in range(len(ydicts)):
+            datacell=ydicts[i]
+            print("datacell",datacell)
+            # print(title[i])
+            self.figure3.axes.plot(datacell[0],datacell[1],label=title[i])
+            self.figure3.axes.scatter(datacell[0],datacell[1], label=title[i],alpha=0.5)
+
+
+
+        # for i in range(len(ys)):
+        #     print(title[i])
+        #     self.figure3.axes.plot(x,ys[i],label=title[i])
+        #     self.figure3.axes.scatter(x,ys[i], label=title[i],alpha=0.5)
         self.figure3.axes.set_ylabel(ylabel)
         self.figure3.axes.set_xlabel(xlabel)
         self.figure3.axes.set_title(titleall)
