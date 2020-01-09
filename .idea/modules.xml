@@ -3,6 +3,13 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/DataProcess.iml" filepath="$PROJECT_DIR$/.idea/DataProcess.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../DataProcessMultithreading/.idea/DataProcessMultithreading.iml" filepath="$PROJECT_DIR$/../DataProcessMultithreading/.idea/DataProcessMultithreading.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Gongjingjing/.idea/Dongjingjing.iml" filepath="$PROJECT_DIR$/../Gongjingjing/.idea/Dongjingjing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../PythonData/.idea/PythonData.iml" filepath="$PROJECT_DIR$/../PythonData/.idea/PythonData.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SocketDemo/.idea/SocketDemo.iml" filepath="$PROJECT_DIR$/../SocketDemo/.idea/SocketDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ZJL/.idea/ZJL.iml" filepath="$PROJECT_DIR$/../ZJL/.idea/ZJL.iml" />
+      <module fileurl="file://E:/学习/工作项目/bioread-master/.idea/bioread-master.iml" filepath="E:/学习/工作项目/bioread-master/.idea/bioread-master.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../csdntest/.idea/csdntest.iml" filepath="$PROJECT_DIR$/../csdntest/.idea/csdntest.iml" />
     </modules>
   </component>
 </project>

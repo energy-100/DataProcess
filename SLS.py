@@ -31,7 +31,18 @@ import matplotlib.pyplot as plt
 
 # print([str(i*0.1) for i in range(1,10)])
 
-x=[1,2,3,1,4,5,6,7,8,5,4]
-y=[1,2,3,1,4,5,6,7,8,5,4]
-print(list(zip(x,y)))
+# x=[1,2,3,1,4,5,6,7,8,5,4]
+# y=[1,2,3,1,4,5,6,7,8,5,4]
+a={"a",1,"b",2}
+# c="b"
+# a[c]=3
+print(a)
+# print(list(zip(x,y)))
 
+
+class A():
+    def __init__(self,x1=["name"],x2={"1","2"}):
+        self.x1=x1
+        self.x2=x2
+
+if __main__""

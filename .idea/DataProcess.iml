@@ -4,5 +4,12 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="jdk" jdkName="Python 3.6.1 (D:\CodeSoft\Anaconda3\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="bioread-master" />
+    <orderEntry type="module" module-name="ZJL" />
+    <orderEntry type="module" module-name="SocketDemo" />
+    <orderEntry type="module" module-name="DataProcessMultithreading" />
+    <orderEntry type="module" module-name="csdntest" />
+    <orderEntry type="module" module-name="Gongjingjing" />
+    <orderEntry type="module" module-name="PythonData" />
   </component>
 </module>

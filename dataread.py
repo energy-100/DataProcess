@@ -8,6 +8,7 @@ import xlsxwriter
 from scipy.optimize import curve_fit
 from datetime import datetime
 from xlutils.copy import copy
+
 import copy
 class cutclass():
     def __init__(self):
@@ -93,6 +94,7 @@ class dataclass():
 
 
 
+
 class dataread():
     def __init__(self,progressBar,statusBar):
         self.progressBar=progressBar
@@ -159,7 +161,28 @@ class dataread():
             data.Repeat_Times=int(datapar[14].strip(datapar[14].split(": ")[0]).strip(": "))
             data.Acq_Gate_Times=int(datapar[15].strip(datapar[15].split(": ")[0]).strip(": "))
             data.Interval_per_Gate=int(datapar[16].strip(datapar[16].split(": ")[0]).strip(": "))
-            data.Channel_Number=int(datapar[17].strip(datapar[17].split(": ")[0]).strip(": "))
+            datanum = int(data.Repeat_Times * data.Count_Num_per_gate)
+            data.Pro_Data1 = np.zeros(data.Acq_Gate_Times * data.Count_Num_per_gate).tolist()
+            print("okkk")
+            print(datapar[17])
+            print(datapar[17].strip(datapar[17].split(":")[0]).strip(":"))
+            if(datapar[17].strip(datapar[17].split(":")[0]).strip(":")==""):
+                print("进入")
+                data.Channel_Number="1"
+                for i in range(18, 18 + datanum * data.Acq_Gate_Times):
+                    data.Raw_Data1.append(int(datapar[i]))
+                if (data.Channel_Number == 2):
+                    for i in range(18 + datanum + 1,
+                                   18 + datanum * data.Acq_Gate_Times + 1 + datanum * data.Acq_Gate_Times):
+                        data.Raw_Data2.append(int(datapar[i]))
+            else:
+                data.Channel_Number=int(datapar[17].strip(datapar[17].split(": ")[0]).strip(": "))
+                for i in range(19, 19 + datanum * data.Acq_Gate_Times):
+                    data.Raw_Data1.append(int(datapar[i]))
+                if (data.Channel_Number == 2):
+                    for i in range(19 + datanum + 1,
+                                   19 + datanum * data.Acq_Gate_Times + 1 + datanum * data.Acq_Gate_Times):
+                        data.Raw_Data2.append(int(datapar[i]))
             # print(data.ACQ_Time)
             #计算时间，以分钟为单位
             # minutecount=0
@@ -171,23 +194,23 @@ class dataread():
             # day=  (float(timelist[2])-1)*24*
             # print(data)
 
-            datanum=int(data.Repeat_Times*data.Count_Num_per_gate)
+            # datanum=int(data.Repeat_Times*data.Count_Num_per_gate)
             # datanum=int(data.Repeat_Times*data.Count_Num_per_gate*data.Acq_Gate_Times)
             # print("datanum",datanum)
             # print(datanum/data.Repeat_Times,data.Acq_Gate_Times*data.Count_Num_per_gate)
             # print()
-            data.Pro_Data1=np.zeros(data.Acq_Gate_Times*data.Count_Num_per_gate).tolist()
+            # data.Pro_Data1=np.zeros(data.Acq_Gate_Times*data.Count_Num_per_gate).tolist()
             # [0 for i in range(data.Acq_Gate_Times*data.Count_Num_per_gate)]
             # print(data.Gate_Time)
             # print("len(data.Raw_Data1)",len(data.Pro_Data1))
             # print("data.Count_Num_per_gate*data.Gate_Time",data.Count_Num_per_gate*data.Gate_Time)
 
 
-            for i in range(19,19+datanum*data.Acq_Gate_Times):
-                data.Raw_Data1.append(int(datapar[i]))
-            if(data.Channel_Number=="2"):
-                for i in range(19+datanum+1,19+datanum*data.Acq_Gate_Times+1+datanum*data.Acq_Gate_Times):
-                    data.Raw_Data2.append(int(datapar[i]))
+            # for i in range(19,19+datanum*data.Acq_Gate_Times):
+            #     data.Raw_Data1.append(int(datapar[i]))
+            # if(data.Channel_Number==2):
+            #     for i in range(19+datanum+1,19+datanum*data.Acq_Gate_Times+1+datanum*data.Acq_Gate_Times):
+            #         data.Raw_Data2.append(int(datapar[i]))
             # print(len(data.Raw_Data1))
             # print(len(data.Raw_Data2))
 
@@ -226,6 +249,9 @@ class dataread():
             # print(data.Pro_Data1)
             data.Max=np.max(data.Pro_Data1)
             data.Min=np.min(data.Pro_Data1)
+            if(data.Max==0):
+                self.filenames.remove(f)
+                continue
             data.cutendnum1=len(data.Pro_Data1)-1
             #复制原始数据到Cut
             data.Cut_Data1=copy.deepcopy(data.Pro_Data1)
@@ -311,26 +337,27 @@ class dataread():
         sheetpars.write(0, 7, "(双曲线)τ")
         sheetpars.write(0, 8, "(双曲线)Γ")
         sheetpars.write(0, 9, "(双曲线)D")
-        sheetpars.write(0, 10, "(双曲线)R_square")
-        sheetpars.write(0, 11, "(双曲线)SSE")
-        sheetpars.write(0, 12, "(双曲线)MSE")
-        sheetpars.write(0, 13, "(双曲线)RMSE")
-        sheetpars.write(0, 14, "(指数)前截点")
-        sheetpars.write(0, 15, "(指数)后截点")
-        sheetpars.write(0, 16, "(指数)I_0")
-        sheetpars.write(0, 17, "(指数)τ")
-        sheetpars.write(0, 18, "(指数)D")
-        sheetpars.write(0, 19, "(指数)R_square")
-        sheetpars.write(0, 20, "(指数)SSE")
-        sheetpars.write(0, 21, "(指数)MSE")
-        sheetpars.write(0, 22, "(指数)RMSE")
-        sheetpars.write(0, 23, "(双曲线积分)I_0")
-        sheetpars.write(0, 24, "(双曲线积分)τ")
-        sheetpars.write(0, 25, "(双曲线积分)Γ")
-        sheetpars.write(0, 26, "(双曲线)D")
-        sheetpars.write(0, 27, "(指数积分)I_0")
-        sheetpars.write(0, 28, "(指数积分)τ")
-        sheetpars.write(0, 29, "(指数)D")
+        sheetpars.write(0, 10, "(双曲线)τ/Γ")
+        sheetpars.write(0, 11, "(双曲线)R_square")
+        sheetpars.write(0, 12, "(双曲线)SSE")
+        sheetpars.write(0, 13, "(双曲线)MSE")
+        sheetpars.write(0, 14, "(双曲线)RMSE")
+        sheetpars.write(0, 15, "(指数)前截点")
+        sheetpars.write(0, 16, "(指数)后截点")
+        sheetpars.write(0, 17, "(指数)I_0")
+        sheetpars.write(0, 18, "(指数)τ")
+        sheetpars.write(0, 19, "(指数)D")
+        sheetpars.write(0, 20, "(指数)R_square")
+        sheetpars.write(0, 21, "(指数)SSE")
+        sheetpars.write(0, 22, "(指数)MSE")
+        sheetpars.write(0, 23, "(指数)RMSE")
+        sheetpars.write(0, 24, "(双曲线积分)I_0")
+        sheetpars.write(0, 25, "(双曲线积分)τ")
+        sheetpars.write(0, 26, "(双曲线积分)Γ")
+        sheetpars.write(0, 27, "(双曲线)D")
+        sheetpars.write(0, 28, "(指数积分)I_0")
+        sheetpars.write(0, 29, "(指数积分)τ")
+        sheetpars.write(0, 30, "(指数)D")
         try:
             print(self.colnum_string(0))
             sheetpars.set_column(self.colnum_string(0),filenamelen)
@@ -360,6 +387,8 @@ class dataread():
                         para=round(para,3)
                     sheetpars.write_number(i, j, para,bold1)
                     j+=1
+                sheetpars.write_number(i, j, round(value.paras["双曲线拟合"][-1].para[1]/value.paras["双曲线拟合"][-1].para[2],5), bold1)
+                j+=1
                 for r in value.paras["双曲线拟合"][-1].R2:
                     if (r != ""):
                         r = round(r, 5)
@@ -430,7 +459,7 @@ class dataread():
                 cutdata1.write_number(i, z, value.paras["双曲线拟合"][-1].cutstartnumspot1)
                 cutdata1.write_number(i, z+1, value.paras["双曲线拟合"][-1].cutendnumspot1)
                 z+=2
-                for spot in value.Pro_Data1[value.cutstartnum1:value.cutendnum1+1]:
+                for spot in value.Pro_Data1[value.paras["双曲线拟合"][-1].cutstartnum1:value.paras["双曲线拟合"][-1].cutendnum1+1]:
                     cutdata1.write_number(i, z, spot)
 
                     z += 1
@@ -443,7 +472,7 @@ class dataread():
                 cutdata2.write_number(i, z, value.paras["指数拟合"][-1].cutstartnumspot1)
                 cutdata2.write_number(i, z + 1, value.paras["指数拟合"][-1].cutendnumspot1)
                 z += 2
-                for spot in value.Pro_Data1[value.cutstartnum1:value.cutendnum1 + 1]:
+                for spot in value.Pro_Data1[value.paras["指数拟合"][-1].cutstartnum1:value.paras["指数拟合"][-1].cutendnum1 + 1]:
                     cutdata2.write_number(i, z, spot)
 
                     z += 1
